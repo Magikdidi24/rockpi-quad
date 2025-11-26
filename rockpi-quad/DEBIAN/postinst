@@ -31,12 +31,21 @@ armbian_require_overlay() {
   fi
 }
 
-requirement_path="/usr/bin/rockpi-quad/requirements.txt"
+# Set up Python virtual environment for rockpi-quad
+VENV_PATH="/opt/rockpi-quad/venv"
+REQUIREMENTS_PATH="/usr/bin/rockpi-quad/requirements.txt"
 
-if [ "$(python3 -c 'import sys; print(f"{sys.version_info.minor >= 11}")')" = "True" ]; then
-  pip3 install -r $requirement_path --break-system-packages
+if [ ! -d "$VENV_PATH" ]; then
+  python3 -m venv "$VENV_PATH"
+fi
+
+# Upgrade pip in the venv and install requirements
+if [ "$("$VENV_PATH/bin/python3" -c 'import sys; print(f"{sys.version_info.minor >= 11}")')" = "True" ]; then
+  "$VENV_PATH/bin/pip" install --upgrade pip
+  "$VENV_PATH/bin/pip" install -r "$REQUIREMENTS_PATH" --break-system-packages
 else
-  pip3 install -r $requirement_path
+  "$VENV_PATH/bin/pip" install --upgrade pip
+  "$VENV_PATH/bin/pip" install -r "$REQUIREMENTS_PATH"
 fi
 
 systemctl enable rockpi-quad.service
@@ -46,10 +55,10 @@ model=$(tr -d '\0' </proc/device-tree/model)
 case "$model" in
 *"Raspberry Pi 4"*)
   raspi-config nonint do_i2c 0
-  if ! grep -q "dtoverlay=pwm,pin=13,func=4" /boot/firmware/config.txt; then
-    echo "dtoverlay=pwm,pin=13,func=4" >> /boot/firmware/config.txt
+  if ! grep -q "dtoverlay=pwm-2chan,pin=12,func=4,pin2=13,func2=4" /boot/config.txt; then
+    echo "dtoverlay=pwm-2chan,pin=12,func=4,pin2=13,func2=4" >> /boot/config.txt
   fi
-  mv /usr/bin/rockpi-quad/env/rpi4.env /etc/rockpi-quad.env
+  cp /usr/bin/rockpi-quad/env/rpi4.env /etc/rockpi-quad.env
   checkReboot
   ;;
 *"Radxa ROCK 4C+"*)
