@@ -8,7 +8,9 @@ Top Board control program
 
 ![penta-hat](images/quad-sata-hat.png)
 
+```
 sudo apt update
 sudo apt install python3-dev
 wget https://github.com/Magikdidi24/rockpi-quad/releases/download/v0.4.0/rockpi-quad.deb
 sudo apt install -y ./rockpi-quad.deb
+```
